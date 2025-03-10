@@ -1,0 +1,144 @@
+/* Establecer el fondo de la página */
+body {
+    background-image: url('../images/fondo.jpg');
+    background-size: cover;
+    background-position: center;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    text-align: center;
+    color: #000000;
+    margin: 0;
+    padding: 0;
+}
+
+/* Estilo para centrar el contenido */
+.container {
+    width: 80%;
+    margin: 0 auto;
+    text-align: center;
+}
+
+/* Estilo para el encabezado */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    margin-left: 190px;
+}
+
+header .logo {
+    width: 200px; /* Ajusta el tamaño de tu logo */
+    border-radius: 10%;
+}
+
+h1 {
+    font-size: 2rem;
+    text-align: center;
+    background-color: aliceblue;
+    border-radius: 50px;
+}
+
+/* Estilo para los formularios */
+form {
+    margin-bottom: 20px;
+}
+
+input[type="text"] {
+    padding: 10px;
+    font-size: 1rem;
+    margin-right: 10px;
+    border-radius: 5px;
+}
+
+input::placeholder {
+    font-family: Georgia, 'Times New Roman', Times, serif;
+}
+
+input{
+    font-family: Georgia, 'Times New Roman', Times, serif;
+}
+
+button {
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: 1px solid black;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+    font-size: 18px;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+/* Estilo para las listas de estudiantes */
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.curso {
+    margin-bottom: 30px;
+    padding: 20px;
+    background-color: rgb(52, 158, 158);
+    border-radius: 10px;
+}
+
+li {
+    margin-bottom: 15px;
+    padding: 10px;
+    background-color: #a8dba8;
+    border-radius: 5px;
+}
+
+/* Estilo para las acciones */
+.acciones {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.capibara-icon {
+    width: 60px; /* Ajusta el tamaño de la imagen del capibara */
+    height: auto;
+    border-radius:20%;
+    border: 2px solid #000000;
+}
+
+/* Centrar los formularios */
+.form-crear-curso input[type="text"] {
+    margin-bottom: 10px;
+}
+
+.eliminar-btn {
+    background-color: #f44336; /* Rojo para indicar eliminación */
+    color: white;
+    border: 1px solid black;
+    padding: 5px 10px;
+    margin-left: 600px;
+    width: 110px;
+    height: auto;
+    cursor: pointer;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+}
+
+.eliminar-btn:hover {
+    background-color: #d32f2f;
+}
+
+.eliminar-curso-btn {
+    background-color: #f44336; /* Rojo para indicar eliminación */
+    color: white;
+    border: 1px solid black;
+    padding: 5px 10px;
+    cursor: pointer;
+    margin-left: 600px;
+    margin-inline-start: 20px;
+    font-family: Georgia, 'Times New Roman', Times, serif;
+}
+
+.eliminar-curso-btn:hover {
+    background-color: #d32f2f;
+}

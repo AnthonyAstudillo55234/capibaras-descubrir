@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capibara Score Descubrir</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/ejemplo.png') }}" type="image/png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header>
+        <h1>Gestión de Cursos y Capibaras<br><br>Escuela de Educación Básica Particular "Descubrir"</h1>
+        <img src="{{ url_for('static', filename='images/logo.jpeg') }}" alt="Logo" class="logo">
+    </header>
+
+    <div class="container">
+        <form action="/crear_curso" method="POST" class="form-crear-curso">
+            <input type="text" name="nombre_curso" placeholder="Nombre del curso" required>
+            <button type="submit">Crear Curso</button>
+        </form>
+
+        {% for curso in cursos %}
+        <div class="curso">
+            <h2>{{ curso.nombre }}</h2>
+            <form action="/agregar_estudiante/{{ curso._id }}" method="POST">
+                <input type="text" name="nombre_estudiante" placeholder="Nombre del estudiante" required>
+                <button type="submit">Agregar Estudiante</button>
+            </form>
+            <form action="/eliminar_curso/{{ curso._id }}" method="POST" style="display:inline;">
+                <button type="submit" class="eliminar-curso-btn">Eliminar Curso</button>
+            </form>
+            <ul>
+                {% for estudiante in curso.estudiantes %}
+                <li>
+                    {{ estudiante.nombre }} - Capibaras: {{ estudiante.capibaras }}
+                    <div class="acciones">
+                        <form action="/modificar_puntaje/{{ curso._id }}/{{ estudiante.nombre }}" method="POST">
+                            <button type="submit" name="accion" value="sumar">+1</button>
+                            <button type="submit" name="accion" value="restar">-1</button>
+                        </form>
+                        <img src="{{ url_for('static', filename='images/capibara.jpg') }}" alt="Capibara" class="capibara-icon">
+                        <form action="/eliminar_estudiante/{{ curso._id }}/{{ estudiante.nombre }}" method="POST" style="display:inline;">
+                            <button type="submit" class="eliminar-btn">Eliminar Estudiante</button>
+                        </form>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
