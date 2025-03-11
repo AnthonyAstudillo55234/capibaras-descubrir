@@ -45,7 +45,6 @@ def modificar_puntaje(curso_id, estudiante_nombre):
             break
     return redirect(url_for('index'))
 
-
 @app.route('/eliminar_estudiante/<curso_id>/<estudiante_nombre>', methods=['POST'])
 def eliminar_estudiante(curso_id, estudiante_nombre):
     # Buscar el curso
@@ -53,10 +52,7 @@ def eliminar_estudiante(curso_id, estudiante_nombre):
     
     # Filtrar los estudiantes para eliminar al estudiante
     estudiantes_actualizados = [estudiante for estudiante in curso['estudiantes'] if estudiante['nombre'] != estudiante_nombre]
-    
-    # Actualizar el curso sin el estudiante eliminado
     mongo.db.cursos.update_one({"_id": ObjectId(curso_id)}, {"$set": {"estudiantes": estudiantes_actualizados}})
-    
     return redirect(url_for('index'))
 
 @app.route('/eliminar_curso/<curso_id>', methods=['POST'])
