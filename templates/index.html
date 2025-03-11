@@ -23,6 +23,9 @@
         <div class="curso">
             <h2>{{ curso.nombre }}</h2>
             <form action="/agregar_estudiante/{{ curso._id }}" method="POST">
+                <small>Por favor, digite el nombre del estudiante en este formato: Ejemplo Juan_Perez</small>
+                <br>
+                <br>
                 <input type="text" name="nombre_estudiante" placeholder="Nombre del estudiante" required>
                 <button type="submit">Agregar Estudiante</button>
             </form>
