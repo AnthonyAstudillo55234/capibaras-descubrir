@@ -1,13 +1,8 @@
-import os
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 
 app = Flask(__name__)
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
 
 # Configuración de la base de datos MongoDB Atlas
 app.config["MONGO_URI"] = "mongodb+srv://anthony55234:anthony667740@cluster0.0bh5b.mongodb.net/capibaras?retryWrites=true&w=majority"
@@ -27,7 +22,7 @@ def crear_curso():
 
 @app.route('/agregar_estudiante/<curso_id>', methods=['POST'])
 def agregar_estudiante(curso_id):
-    nombre_estudiante = request.form.get('nombre_estudiante')
+    nombre_estudiante = request.form.get('nombre_estudiante').strip()
     if nombre_estudiante:
         mongo.db.cursos.update_one({"_id": ObjectId(curso_id)}, {"$push": {"estudiantes": {"nombre": nombre_estudiante, "capibaras": 0}}})
     return redirect(url_for('index'))
@@ -45,6 +40,10 @@ def modificar_puntaje(curso_id, estudiante_nombre):
                 estudiante['capibaras'] -= 1
             if estudiante['capibaras'] >= 10:
                 # Redirige a la página de premio si el estudiante llega a 10 capibaras
+                mongo.db.cursos.update_one(
+                    {"_id": ObjectId(curso_id), "estudiantes.nombre": estudiante_nombre},
+                    {"$set": {"estudiantes.$.capibaras": 0}}
+                )
                 return redirect(url_for('premio', estudiante_nombre=estudiante_nombre))
             mongo.db.cursos.update_one({"_id": ObjectId(curso_id)}, {"$set": {"estudiantes": curso['estudiantes']}})
             break
