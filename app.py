@@ -1,8 +1,13 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for, jsonify
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 
 app = Flask(__name__)
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
 
 # Configuración de la base de datos MongoDB Atlas
 app.config["MONGO_URI"] = "mongodb+srv://anthony55234:anthony667740@cluster0.0bh5b.mongodb.net/capibaras?retryWrites=true&w=majority"
