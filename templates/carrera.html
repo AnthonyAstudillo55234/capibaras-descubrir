@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrera de Capibaras</title>
+    <style>
+        body {
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            background-image: url('../static/images/fondo.jpg');
+            text-align: center;
+        }
+
+        .pista {
+            width: 90%;
+            max-width: 800px;
+            margin: 20px auto;
+            border: 2px solid black;
+            background-image: url('../static/images/carrera.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            padding: 10px;
+            position: relative;
+        }
+
+        .pista .background-image {
+            width: 10%;
+            height: 10%;
+        }
+
+        .estudiante {
+            display: flex;
+            align-items: center;
+            position: relative;
+            height: 50px;
+            transition: left 0.5s ease-in-out;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+            border: 1px solid black;
+            border-radius: 10%;
+        }
+
+        .meta {
+            position: absolute;
+            right: 10px;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            background-color: red;
+        }
+
+        .btn-regresar {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #15ff00;
+            font-family: Georgia, 'Times New Roman', Times, serif;
+            color: rgb(0, 0, 0);
+            border: 1px solid #000000;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .btn-regresar:hover {
+            background-color: #00b300;
+        }
+
+        .titulo {
+            background-color: white;
+            border: 1px solid black;
+            display: inline-block;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="titulo">Carrera de Capibaras</h1>
+    <div id="carreras"></div>
+    <button class="btn-regresar" onclick="window.location.href='/'">Regresar al Inicio</button>
+
+    <script>
+        function actualizarCarrera() {
+            fetch('/get_cursos')
+                .then(response => response.json())
+                .then(cursos => {
+                    const contenedor = document.getElementById('carreras');
+                    contenedor.innerHTML = ''; // Limpiar antes de actualizar
+                    
+                    cursos.forEach(curso => {
+                        const cursoDiv = document.createElement('div');
+                        cursoDiv.classList.add('pista');
+                        cursoDiv.innerHTML = `<h2>${curso.nombre}</h2><div class="meta"></div>`;
+                        
+                        curso.estudiantes.forEach(estudiante => {
+                            const estudianteDiv = document.createElement('div');
+                            estudianteDiv.classList.add('estudiante');
+                            estudianteDiv.style.left = `${estudiante.capibaras * 10}%`; // Avance dinámico
+
+                            estudianteDiv.innerHTML = `
+                                <img src="/static/images/capibara.jpg" class="avatar">
+                                <span>${estudiante.nombre} - ${estudiante.capibaras} capibaras</span>
+                            `;
+
+                            cursoDiv.appendChild(estudianteDiv);
+                        });
+
+                        contenedor.appendChild(cursoDiv);
+                    });
+                })
+                .catch(error => console.error("Error obteniendo los datos:", error));
+        }
+
+        setInterval(actualizarCarrera, 2000); // Actualizar cada 2 segundos
+        actualizarCarrera(); // Llamar al inicio
+    </script>
+</body>
+</html>

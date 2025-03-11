@@ -24,7 +24,8 @@ def crear_curso():
 def agregar_estudiante(curso_id):
     nombre_estudiante = request.form.get('nombre_estudiante').strip()
     if nombre_estudiante:
-        mongo.db.cursos.update_one({"_id": ObjectId(curso_id)}, {"$push": {"estudiantes": {"nombre": nombre_estudiante, "capibaras": 0}}})
+        nuevo_estudiante = {"nombre": nombre_estudiante, "capibaras": 0, "comentarios": []}
+        mongo.db.cursos.update_one({"_id": ObjectId(curso_id)}, {"$push": {"estudiantes": nuevo_estudiante}})
     return redirect(url_for('index'))
 
 @app.route('/modificar_puntaje/<curso_id>/<estudiante_nombre>', methods=['POST'])
@@ -32,43 +33,72 @@ def modificar_puntaje(curso_id, estudiante_nombre):
     accion = request.form.get('accion')
     curso = mongo.db.cursos.find_one({"_id": ObjectId(curso_id)})
     
-    for estudiante in curso['estudiantes']:
-        if estudiante['nombre'] == estudiante_nombre:
-            if accion == 'sumar':
-                estudiante['capibaras'] += 1
-            elif accion == 'restar' and estudiante['capibaras'] > 0:
-                estudiante['capibaras'] -= 1
-            if estudiante['capibaras'] >= 10:
-                # Redirige a la página de premio si el estudiante llega a 10 capibaras
-                mongo.db.cursos.update_one(
-                    {"_id": ObjectId(curso_id), "estudiantes.nombre": estudiante_nombre},
-                    {"$set": {"estudiantes.$.capibaras": 0}}
-                )
-                return redirect(url_for('premio', estudiante_nombre=estudiante_nombre))
-            mongo.db.cursos.update_one({"_id": ObjectId(curso_id)}, {"$set": {"estudiantes": curso['estudiantes']}})
-            break
+    if curso:
+        estudiantes = curso.get("estudiantes", [])
+        for estudiante in estudiantes:
+            if estudiante['nombre'] == estudiante_nombre:
+                if accion == 'sumar' and estudiante['capibaras'] < 10:
+                    estudiante['capibaras'] += 1
+                elif accion == 'restar' and estudiante['capibaras'] > 0:
+                    estudiante['capibaras'] -= 1
+                mongo.db.cursos.update_one({"_id": ObjectId(curso_id)}, {"$set": {"estudiantes": estudiantes}})
+                break
     return redirect(url_for('index'))
 
 @app.route('/eliminar_estudiante/<curso_id>/<estudiante_nombre>', methods=['POST'])
 def eliminar_estudiante(curso_id, estudiante_nombre):
-    # Buscar el curso
     curso = mongo.db.cursos.find_one({"_id": ObjectId(curso_id)})
     
-    # Filtrar los estudiantes para eliminar al estudiante
-    estudiantes_actualizados = [estudiante for estudiante in curso['estudiantes'] if estudiante['nombre'] != estudiante_nombre]
-    mongo.db.cursos.update_one({"_id": ObjectId(curso_id)}, {"$set": {"estudiantes": estudiantes_actualizados}})
+    if curso:
+        estudiantes_actualizados = [estudiante for estudiante in curso['estudiantes'] if estudiante['nombre'] != estudiante_nombre]
+        mongo.db.cursos.update_one({"_id": ObjectId(curso_id)}, {"$set": {"estudiantes": estudiantes_actualizados}})
+    
     return redirect(url_for('index'))
 
 @app.route('/eliminar_curso/<curso_id>', methods=['POST'])
 def eliminar_curso(curso_id):
-    # Eliminar el curso de la base de datos
     mongo.db.cursos.delete_one({"_id": ObjectId(curso_id)})
-    
     return redirect(url_for('index'))
 
 @app.route('/premio/<estudiante_nombre>', methods=['GET'])
 def premio(estudiante_nombre):
     return render_template('premio.html', estudiante_nombre=estudiante_nombre)
+
+@app.route('/get_cursos', methods=['GET'])
+def get_cursos():
+    cursos = list(mongo.db.cursos.find({}, {"_id": 1, "nombre": 1, "estudiantes": 1}))
+    
+    for curso in cursos:
+        curso["_id"] = str(curso["_id"])
+        for estudiante in curso["estudiantes"]:
+            estudiante["capibaras"] = int(estudiante["capibaras"])
+
+    return jsonify(cursos)
+
+@app.route('/carrera')
+def carrera():
+    return render_template('carrera.html')
+
+@app.route('/agregar_comentario/<curso_id>/<estudiante_nombre>', methods=['POST'])
+def agregar_comentario(curso_id, estudiante_nombre):
+    comentario = request.form.get('comentario')
+    curso = mongo.db.cursos.find_one({"_id": ObjectId(curso_id)})
+    
+    if curso:
+        estudiantes = curso.get("estudiantes", [])
+        for estudiante in estudiantes:
+            if estudiante["nombre"] == estudiante_nombre:
+                if "comentarios" not in estudiante:
+                    estudiante["comentarios"] = []  # Se asegura de que la clave exista
+                estudiante["comentarios"].append(comentario)
+
+                mongo.db.cursos.update_one(
+                    {"_id": ObjectId(curso_id)},
+                    {"$set": {"estudiantes": estudiantes}}
+                )
+                break
+
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -19,6 +19,8 @@
             <button type="submit">Crear Curso</button>
         </form>
 
+        <button onclick="window.location.href='/carrera'">Ir a la Carrera de Capibaras</button>
+
         {% for curso in cursos %}
         <div class="curso">
             <h2>{{ curso.nombre }}</h2>
@@ -45,6 +47,22 @@
                         <form action="/eliminar_estudiante/{{ curso._id }}/{{ estudiante.nombre }}" method="POST" style="display:inline;">
                             <button type="submit" class="eliminar-btn">Eliminar Estudiante</button>
                         </form>
+                    </div>
+                    
+                    <!-- Sección de comentarios -->
+                    <div class="comentarios">
+                        <h4>Comentarios del Maestro</h4>
+                        <form action="/agregar_comentario/{{ curso._id }}/{{ estudiante.nombre }}" method="POST">
+                            <textarea name="comentario" placeholder="Escribe una observación..." required></textarea>
+                            <button type="submit">Guardar Comentario</button>
+                        </form>
+                        {% if estudiante.comentarios %}
+                            <ul>
+                                {% for comentario in estudiante.comentarios %}
+                                    <li>{{ comentario }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
                     </div>
                 </li>
                 {% endfor %}
