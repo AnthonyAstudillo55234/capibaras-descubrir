@@ -39,6 +39,9 @@ def modificar_puntaje(curso_id, estudiante_nombre):
             if estudiante['nombre'] == estudiante_nombre:
                 if accion == 'sumar' and estudiante['capibaras'] < 10:
                     estudiante['capibaras'] += 1
+                    if estudiante['capibaras'] == 10:
+                        mongo.db.cursos.update_one({"_id": ObjectId(curso_id)}, {"$set": {"estudiantes": estudiantes}})
+                        return redirect(url_for('premio', estudiante_nombre=estudiante_nombre))
                 elif accion == 'restar' and estudiante['capibaras'] > 0:
                     estudiante['capibaras'] -= 1
                 mongo.db.cursos.update_one({"_id": ObjectId(curso_id)}, {"$set": {"estudiantes": estudiantes}})
