@@ -1,8 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, jsonify
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session, flash
 from flask_pymongo import PyMongo
 from bson.objectid import ObjectId
 
 app = Flask(__name__)
+
+app.secret_key = "clave_secreta_super_segura"  # Necesario para usar session
 
 # Configuración de la base de datos MongoDB Atlas
 app.config["MONGO_URI"] = "mongodb+srv://anthony55234:anthony667740@cluster0.0bh5b.mongodb.net/capibaras?retryWrites=true&w=majority"
@@ -16,12 +18,30 @@ def index():
 @app.route('/crear_curso', methods=['POST'])
 def crear_curso():
     nombre_curso = request.form.get('nombre_curso')
-    if nombre_curso:
-        mongo.db.cursos.insert_one({"nombre": nombre_curso, "estudiantes": []})
+    clave_acceso = request.form.get('clave_acceso')
+
+    if nombre_curso and clave_acceso:
+        mongo.db.cursos.insert_one({"nombre": nombre_curso, "clave_acceso": clave_acceso, "estudiantes": []})
+        flash("Curso creado correctamente", "success")
     return redirect(url_for('index'))
+
+@app.route("/verificar_clave/<curso_id>", methods=["POST"])
+def verificar_clave(curso_id):
+    clave_ingresada = request.form.get("clave")  # Obtener clave enviada desde JS
+    curso = mongo.db.cursos.find_one({"_id": ObjectId(curso_id)})  # Buscar el curso en la BD
+
+    if curso and "clave_acceso" in curso and curso["clave_acceso"] == clave_ingresada:
+        session[f'curso_autorizado_{curso_id}'] = True  # Guardamos la autorización en la sesión
+        return jsonify({"autorizado": True})
+    else:
+        return jsonify({"autorizado": False})
 
 @app.route('/agregar_estudiante/<curso_id>', methods=['POST'])
 def agregar_estudiante(curso_id):
+    if not session.get(f'curso_autorizado_{curso_id}'):  # Verifica si la sesión tiene la autorización
+        flash("Acceso denegado. Ingresa la clave del curso.", "danger")
+        return redirect(url_for('index'))
+
     nombre_estudiante = request.form.get('nombre_estudiante').strip()
     if nombre_estudiante:
         nuevo_estudiante = {"nombre": nombre_estudiante, "capibaras": 0, "comentarios": []}
@@ -30,9 +50,13 @@ def agregar_estudiante(curso_id):
 
 @app.route('/modificar_puntaje/<curso_id>/<estudiante_nombre>', methods=['POST'])
 def modificar_puntaje(curso_id, estudiante_nombre):
+    if not session.get(f'curso_autorizado_{curso_id}'):  # Verifica si la sesión tiene la autorización
+        flash("Acceso denegado. Ingresa la clave del curso.", "danger")
+        return redirect(url_for('index'))
+
     accion = request.form.get('accion')
     curso = mongo.db.cursos.find_one({"_id": ObjectId(curso_id)})
-    
+
     if curso:
         estudiantes = curso.get("estudiantes", [])
         for estudiante in estudiantes:
@@ -50,6 +74,10 @@ def modificar_puntaje(curso_id, estudiante_nombre):
 
 @app.route('/eliminar_estudiante/<curso_id>/<estudiante_nombre>', methods=['POST'])
 def eliminar_estudiante(curso_id, estudiante_nombre):
+    if not session.get(f'curso_autorizado_{curso_id}'):  # Verifica si la sesión tiene la autorización
+        flash("Acceso denegado. Ingresa la clave del curso.", "danger")
+        return redirect(url_for('index'))
+
     curso = mongo.db.cursos.find_one({"_id": ObjectId(curso_id)})
     
     if curso:
@@ -60,7 +88,13 @@ def eliminar_estudiante(curso_id, estudiante_nombre):
 
 @app.route('/eliminar_curso/<curso_id>', methods=['POST'])
 def eliminar_curso(curso_id):
+    if not session.get(f'curso_autorizado_{curso_id}'):  # Verifica si la sesión tiene la autorización
+        flash("Acceso denegado. Ingresa la clave del curso.", "danger")
+        return redirect(url_for('index'))
+
     mongo.db.cursos.delete_one({"_id": ObjectId(curso_id)})
+    flash("Curso eliminado correctamente", "success")
+    session.pop(f'curso_autorizado_{curso_id}', None)  # Eliminar la autorización de la sesión
     return redirect(url_for('index'))
 
 @app.route('/premio/<estudiante_nombre>', methods=['GET'])
@@ -86,7 +120,7 @@ def carrera():
 def agregar_comentario(curso_id, estudiante_nombre):
     comentario = request.form.get('comentario')
     curso = mongo.db.cursos.find_one({"_id": ObjectId(curso_id)})
-    
+
     if curso:
         estudiantes = curso.get("estudiantes", [])
         for estudiante in estudiantes:
@@ -101,6 +135,12 @@ def agregar_comentario(curso_id, estudiante_nombre):
                 )
                 break
 
+    return redirect(url_for('index'))
+
+@app.route('/logout')
+def logout():
+    session.clear()  # Limpiar la sesión completamente
+    flash("Sesión cerrada correctamente", "success")
     return redirect(url_for('index'))
 
 if __name__ == '__main__':

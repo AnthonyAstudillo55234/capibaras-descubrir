@@ -6,6 +6,105 @@
     <title>Capibara Score Descubrir</title>
     <link rel="icon" href="{{ url_for('static', filename='images/ejemplo.png') }}" type="image/png">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script>
+        function verificarClave(cursoId) {
+            var claveIngresada = document.getElementById("clave_" + cursoId).value;
+            
+            fetch("/verificar_clave/" + cursoId, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ "clave": claveIngresada }) 
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.autorizado) {
+                    document.getElementById("opciones_" + cursoId).style.display = "block";
+                    document.getElementById("clave_form_" + cursoId).style.display = "none";
+                    sessionStorage.setItem('curso_autorizado_' + cursoId, true);
+                } else {
+                    alert("Clave incorrecta, intenta de nuevo.");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        // Agregar estudiante
+        function agregarEstudiante(cursoId) {
+            var nombreEstudiante = document.getElementById("nombre_estudiante_" + cursoId).value;
+            
+            fetch("/agregar_estudiante/" + cursoId, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ "nombre_estudiante": nombreEstudiante }) 
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Actualizar la lista de estudiantes sin recargar la página
+                    var listaEstudiantes = document.getElementById("lista_estudiantes_" + cursoId);
+                    var nuevoEstudiante = document.createElement("li");
+                    nuevoEstudiante.textContent = nombreEstudiante + " - Capibaras: 0";
+                    listaEstudiantes.appendChild(nuevoEstudiante);
+                } else {
+                    alert("Error al agregar estudiante.");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        // Modificar puntaje de un estudiante
+        function modificarPuntaje(cursoId, estudianteNombre, accion) {
+            fetch("/modificar_puntaje/" + cursoId + "/" + estudianteNombre, {
+                method: "POST",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: new URLSearchParams({ "accion": accion })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    var estudianteElemento = document.getElementById("estudiante_" + estudianteNombre);
+                    estudianteElemento.querySelector(".capibaras").textContent = "Capibaras: " + data.capibaras;
+                } else {
+                    alert("Error al modificar puntaje.");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+        
+        // Eliminar estudiante
+        function eliminarEstudiante(cursoId, estudianteNombre) {
+            fetch("/eliminar_estudiante/" + cursoId + "/" + estudianteNombre, {
+                method: "POST"
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    var estudianteElemento = document.getElementById("estudiante_" + estudianteNombre);
+                    estudianteElemento.remove();
+                } else {
+                    alert("Error al eliminar estudiante.");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        // Eliminar curso
+        function eliminarCurso(cursoId) {
+            fetch("/eliminar_curso/" + cursoId, {
+                method: "POST"
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    var cursoElemento = document.getElementById("curso_" + cursoId);
+                    cursoElemento.remove();
+                } else {
+                    alert("Error al eliminar curso.");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    </script>
 </head>
 <body>
     <header>
@@ -16,6 +115,7 @@
     <div class="container">
         <form action="/crear_curso" method="POST" class="form-crear-curso">
             <input type="text" name="nombre_curso" placeholder="Nombre del curso" required>
+            <input type="password" name="clave_acceso" placeholder="Clave de acceso" required>
             <button type="submit">Crear Curso</button>
         </form>
 
@@ -24,49 +124,55 @@
         {% for curso in cursos %}
         <div class="curso">
             <h2>{{ curso.nombre }}</h2>
-            <form action="/agregar_estudiante/{{ curso._id }}" method="POST">
-                <small>Por favor, digite el nombre del estudiante en este formato: Ejemplo Juan_Perez</small>
-                <br>
-                <br>
-                <input type="text" name="nombre_estudiante" placeholder="Nombre del estudiante" required>
-                <button type="submit">Agregar Estudiante</button>
-            </form>
-            <form action="/eliminar_curso/{{ curso._id }}" method="POST" style="display:inline;">
-                <button type="submit" class="eliminar-curso-btn">Eliminar Curso</button>
-            </form>
-            <ul>
-                {% for estudiante in curso.estudiantes %}
-                <li>
-                    {{ estudiante.nombre }} - Capibaras: {{ estudiante.capibaras }}
-                    <div class="acciones">
-                        <form action="/modificar_puntaje/{{ curso._id }}/{{ estudiante.nombre }}" method="POST">
-                            <button type="submit" name="accion" value="sumar">+1</button>
-                            <button type="submit" name="accion" value="restar">-1</button>
-                        </form>
-                        <img src="{{ url_for('static', filename='images/capibara.jpg') }}" alt="Capibara" class="capibara-icon">
-                        <form action="/eliminar_estudiante/{{ curso._id }}/{{ estudiante.nombre }}" method="POST" style="display:inline;">
-                            <button type="submit" class="eliminar-btn">Eliminar Estudiante</button>
-                        </form>
-                    </div>
-                    
-                    <!-- Sección de comentarios -->
-                    <div class="comentarios">
-                        <h4>Comentarios del Maestro</h4>
-                        <form action="/agregar_comentario/{{ curso._id }}/{{ estudiante.nombre }}" method="POST">
-                            <textarea name="comentario" placeholder="Escribe una observación..." required></textarea>
-                            <button type="submit">Guardar Comentario</button>
-                        </form>
-                        {% if estudiante.comentarios %}
-                            <ul>
-                                {% for comentario in estudiante.comentarios %}
-                                    <li>{{ comentario }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    </div>
-                </li>
-                {% endfor %}
-            </ul>
+            <div id="clave_form_{{ curso._id }}">
+                <input type="password" id="clave_{{ curso._id }}" placeholder="Ingresar clave para editar">
+                <button onclick="verificarClave('{{ curso._id }}')">Ingresar</button>
+            </div>
+            <div id="opciones_{{ curso._id }}" style="display: none;">
+                <form action="/agregar_estudiante/{{ curso._id }}" method="POST">
+                    <small>Por favor, digite el nombre del estudiante en este formato: Ejemplo Juan_Perez</small>
+                    <br><br>
+                    <input type="text" name="nombre_estudiante" placeholder="Nombre del estudiante" required>
+                    <button type="submit">Agregar Estudiante</button>
+                </form>
+                <form action="/eliminar_curso/{{ curso._id }}" method="POST" style="display:inline;">
+                    <button type="submit" class="eliminar-curso-btn">Eliminar Curso</button>
+                </form>
+                <form action="{{ url_for('logout') }}" method="get" style="display:inline;">
+                    <button type="submit" class="btn btn-danger">Cerrar Sesión</button>
+                </form>
+                <ul>
+                    {% for estudiante in curso.estudiantes %}
+                    <li>
+                        {{ estudiante.nombre }} - Capibaras: {{ estudiante.capibaras }}
+                        <div class="acciones">
+                            <form action="/modificar_puntaje/{{ curso._id }}/{{ estudiante.nombre }}" method="POST">
+                                <button type="submit" name="accion" value="sumar">+1</button>
+                                <button type="submit" name="accion" value="restar">-1</button>
+                            </form>
+                            <img src="{{ url_for('static', filename='images/capibara.jpg') }}" alt="Capibara" class="capibara-icon">
+                            <form action="/eliminar_estudiante/{{ curso._id }}/{{ estudiante.nombre }}" method="POST" style="display:inline;">
+                                <button type="submit" class="eliminar-btn">Eliminar Estudiante</button>
+                            </form>
+                        </div>
+                        <div class="comentarios">
+                            <h4>Comentarios del Maestro</h4>
+                            <form action="/agregar_comentario/{{ curso._id }}/{{ estudiante.nombre }}" method="POST">
+                                <textarea name="comentario" placeholder="Escribe una observación..." required></textarea>
+                                <button type="submit">Guardar Comentario</button>
+                            </form>
+                            {% if estudiante.comentarios %}
+                                <ul>
+                                    {% for comentario in estudiante.comentarios %}
+                                        <li>{{ comentario }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
         {% endfor %}
     </div>
