@@ -28,6 +28,26 @@
             })
             .catch(error => console.error("Error:", error));
         }
+        
+        // Función para eliminar un comentario sin recargar la página
+        function eliminarComentario(event, cursoId, estudianteNombre, comentarioId) {
+            event.preventDefault();
+
+            fetch("/eliminar_comentario/" + cursoId + "/" + estudianteNombre + "/" + comentarioId, {
+                method: "POST"
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Eliminar el comentario del DOM
+                    var comentarioElement = document.getElementById("comentario_" + comentarioId);
+                    comentarioElement.remove();
+                } else {
+                    alert("Error al eliminar el comentario.");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
 
         // Función para agregar un estudiante sin recargar la página
         function agregarEstudiante(event, cursoId) {
@@ -195,7 +215,10 @@
                             </form>
                             <ul>
                                 {% for comentario in estudiante.comentarios %}
-                                <li>{{ comentario }}</li>
+                                <li id="comentario_{{ comentario }}">
+                                    {{ comentario }}
+                                    <button onclick="eliminarComentario(event, '{{ curso._id }}', '{{ estudiante.nombre }}', '{{ comentario }}')">Eliminar</button>
+                                </li>
                                 {% endfor %}
                             </ul>
                         </div>

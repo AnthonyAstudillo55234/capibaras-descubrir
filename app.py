@@ -143,5 +143,24 @@ def logout():
     flash("Sesión cerrada correctamente", "success")
     return redirect(url_for('index'))
 
+@app.route('/eliminar_comentario/<curso_id>/<estudiante_nombre>/<comentario_id>', methods=['POST'])
+def eliminar_comentario(curso_id, estudiante_nombre, comentario_id):
+    curso = mongo.db.cursos.find_one({"_id": ObjectId(curso_id)})
+
+    if curso:
+        estudiantes = curso.get("estudiantes", [])
+        for estudiante in estudiantes:
+            if estudiante["nombre"] == estudiante_nombre:
+                comentarios = estudiante.get("comentarios", [])
+                # Eliminar el comentario usando el comentario_id
+                comentarios = [comentario for comentario in comentarios if comentario != comentario_id]
+                estudiante["comentarios"] = comentarios
+                mongo.db.cursos.update_one(
+                    {"_id": ObjectId(curso_id)},
+                    {"$set": {"estudiantes": estudiantes}}
+                )
+                break
+    return jsonify({"success": True})
+
 if __name__ == '__main__':
     app.run(debug=True)
