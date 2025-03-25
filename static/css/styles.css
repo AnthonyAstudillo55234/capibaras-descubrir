@@ -142,3 +142,18 @@ li {
 .eliminar-curso-btn:hover {
     background-color: #d32f2f;
 }
+
+.capibaras {
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+.capibaras.updated {
+    animation: pulse 0.5s ease-out;
+}
+
+@keyframes pulse {
+    0% { color: #4CAF50; }
+    50% { color: #FF6347; }
+    100% { color: #4CAF50; }
+}
